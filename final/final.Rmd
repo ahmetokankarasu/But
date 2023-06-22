@@ -1,0 +1,163 @@
+---
+title: "Kodlama Dillerinin Popülerliklerinin Analizi"
+author: 
+  - Ahmet Okan Karasu[^1]
+bibliography: ../bibliography/biblio.bib
+csl: ../csl/apa-tr.csl
+header-includes:
+  - \usepackage{polyglossia}
+  - \setmainlanguage{turkish}
+  - \usepackage{booktabs}
+  - \usepackage{caption}
+  - \captionsetup[table]{skip=10pt}
+output:
+  bookdown::pdf_document2:
+    fig_caption: yes
+    fig_height: 3
+    fig_width: 4
+    keep_tex: no
+    # latex_engine: xelatex
+    number_sections: yes
+    toc: no
+geometry: margin=1in
+link-citations: yes
+urlcolor: blue
+fontsize: 12pt
+biblio-style: apalike
+abstract: |
+  Çeşitli kodlama dillerinin, internetteki populerliğine etki eden parametreler belirlenmesi
+editor_options:
+  markdown:
+    wrap: 72
+---
+ 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+<!-- ======================================================================= -->
+
+<!-- ============================== NOTLAR ================================= -->
+
+<!-- ======================================================================= -->
+[^1]: 19080760, [Github Repo](https://github.com/ahmetokankarasu/Final_Odevi)
+
+# Giriş
+
+Popülerlik öncelikle tanınma gerektilen bir kavramdır. Bu tanınma durumuna etki eden çeşitli faktörler bulunmaktadır. Bu faktörlere örnek olarak, bilginin aktarılması, ihtiyaç hissedilmesi gibi bazı süreçlerdir. Yazılım sektöründe de değişen zamana bağlı olarak kullanılan yazılım dillerinde de değişimler görünmektedir. Yazılım dillerindeki bu popülerliğe etki eden, Wikipedia ve Github sitelerinden gelen bilgiler dahil olmak üzere inceleme yapılmıştır. Bu çalışmada kullanılan 50 dil için kullanıcı sayıları ve sektördeki iş sayılarına etki eden faktörlerin analizleri yapılıp yorumlanmıştır.
+
+
+
+## Çalışmanın Amacı
+
+Bu çalışmada kapsamında 50 farklı programlama dili ve bunlara bağlı 10 ölçütün birbirleriyle olan ilişkilerinin tespiti için çeşitli veri analizi yöntemlerinin kullanılması amaçlanmıştır. Bu doğrultuda, github ve wikipedia gibi bilgi kaynaklarının da yazılım alanındaki etkilerinin hangi yönde ve güçte olduğunu tespit edilmesi planlanmaktadır.
+
+## Literatür
+
+Dil çeşitli semboller aracılığıyla ifade edilen ve bir bilginin aktarılması haricinde, bir komutun birseye (örneğin bir işçi veya bilgisayar gibi) aktarılmasında sağlayan bir kavramdır. Bu kavram sadece konuşma dili sınırlı olmayan ve kendi içinde kuralları, standartları, kavramlar, isaretler vb. bulunmaktadır. Örneğin; matamatik doğayı anlamakta kullandığımız bir dildir.
+Yazılım dünyasında bu türde bilinen veya çoğunlukla çok az kişinin bildiği diller de bulunmaktadır. Bunlar, kullanım alanlarına (web geliştirme, istatistiksel analiz vb.) veya tiplerine göre (programlama dili, sorgulama dili veya veri transferi vb.) çok farklı kategorilerde olabilmektedir. Örneğin , bu çalışma kapsamında da kullanılan R programlama dili istatistik alanı için geliştirilmiş açık kaynak kodlu bir dildir. Kullanım alanı, kullanım olaylığı ve gerekli kütüphanelerin fazlalığından dolayı popüler dillerden  birisidir. Benzer olarak SQL sorgulama dili ise kendi alanında kullanılan başka bir popüler başka bir dildir. Bazı diller genel kullanıma uygunken (SQL, Python vb), bazıları da ise sınırlı kullanım alanlarında dolayı daha az tercih edilmektedir. Bunun nedenleri, çok eski ve kullanım alanlarının olmaması, firmaların kendi ürünlerinde geliştirmekte kullanmak için ürettikleri diller olmasından kaynaklanmaktadır.  @ayvaz2016python , @ccobanouglu2020herkes, @koseouglu2008veritabani, @csahin2007java.
+
+
+# Veri
+
+Bu çalışmada kullanılan veri Github'daki  [tidytuesday reposunda](https://github.com/rfordatascience/tidytuesday/tree/master/data/2023/2023-03-21) bulunan programlama dillerine ait bir veriseti kullanılmıştır. Verinin orginal hali [Programming Language DataBase'den](https://pldb.com/)  paylaşılmıştır. Ayrıca 4303 dile ait  49 değişkene ait bilgileri içermektedir. Verinin çalışmaya uygun hale getirilmesi için 15 değişken (2 kategorik ve 8 numerik) seçildi ve **language_rank** değişkenin olarak ilk 50'ı olacak şekilde fitreleme yapılmıştır. 8 numerik değişkene ait ortalaması, standart sapması, max, min ve ortanca değerini gösteren (Tablo1) oluşturulmuştur.
+
+
+```{r, echo=FALSE}
+# library(tidyverse)
+library(dplyr)
+library(here)
+library(summarytools)
+# devtools::install_github("emraher/summarytools")
+library(xtable) 
+library(ggplot2)
+library(ggcorrplot)
+library(tidyr)
+
+Data <- read.csv("../data/tidytuesday_languages.csv")
+
+Var_Cat <- c( "type", "is_open_source" )
+Var_Num <- c("book_count", "semantic_scholar", "language_rank", 
+             "github_language_repos", "wikipedia_daily_page_views", "wikipedia_revision_count", 
+             "number_of_users", "number_of_jobs")
+Active_Col <- c("title", Var_Cat, Var_Num)
+# A  <- table(Data$type)
+# A  <- sort(A)
+Data <- Data[ , colnames(Data) %in% Active_Col]
+
+Data <- Data[Data$language_rank <=50, ]
+
+Data$type <- as.factor(Data$type)
+```
+
+```{r echo=FALSE, results='asis1'}
+
+
+st_options(lang = "tr")
+Data %>%
+  select(Var_Num) %>% 
+  descr(stats = c("mean", "sd", "min", "med", "max"), transpose = TRUE) %>% 
+  xtable(caption = "Özet İstatistikler",
+         label = "tab:ozet",
+         align = c("l", "c", "c", "c", "c", "c")) %>% 
+  print(booktabs = TRUE, comment = FALSE, caption.placement = "top")
+```
+
+
+```{r echo=FALSE, results='asis'}
+
+Data %>% select(Var_Cat)  %>% 
+  summary()
+
+```
+
+
+# Yöntem ve Veri Analizi
+
+Yazılım alanında kullanılan diller hakkında yorum yapabilmek için öncelikle farklı dil tiplerinin kullanıcı sayıları ve bu alandaki iş değerlerine bakmamız daha uygundur. 
+
+
+```{r echo=FALSE, fig.cap="Kullanıcı sayısı kutu grafiği"}
+
+ggplot(Data) +
+  geom_boxplot(aes(x=type, y=number_of_users))
+
+```
+```{r echo=FALSE, fig.cap="İş sayısı kutu grafiği"}
+
+ggplot(Data, aes(x=type, y=number_of_jobs)) +
+  geom_boxplot()
+
+```
+
+Şekil 1 ve 2 incelendiğinde  özellikle sorgulama dillerinin (query language) median değer olarak diğerlerinden daha fazla tercih edildiği görülmektedir. Bunun nedeni çoğu sektörde verilerin depolanması veya sorgulanması aşamasında gerekmektedir. Bu nedenle de veri içerikli sektörlerde özellikle aranan kriterler arasındadır. Ayrıca web geliştirmede kullanılan HTML ve CSS gibi dilleri (ek olarak sorgu dilleri) alanlarında alternatifi olmadığı için özellikle tercih edilmektedir. PL ile gösterilen programlama dillerinde ise hem kullanıcı sayısı  hemde iş sayısı sorgulama dillerine göre farklı bir dağılım göstermektedir. Bunun nedeni ise 40 farklı programlama dilinden bazıları aşırı derece kullanılması ve temel gereksinimlerinin daha fazla olmasındandır. Örneğin algoritma geliştirme gibi kavramlar sorgulama dillerinde pek kullanılan ifadeler değildir.  
+
+
+## Dağılım matrisi ve değişkenlerin birbirleri ile olan ilişkisi
+
+Şekil 3'deki corelasyon-dağılım matriksine göre kodlama dillerinin kullanıcı sayılarının, kitap sayısı, wikipedia görüntülenmesi, sayfa düzenlemesi ve github'taki repo sayılarıyla yüksek düzeyde pozitif korelasyona sahip olduğu görünmektedir. Özellikle github korelasyon değeri 0.698 değerine sahiptir. Buna rağmen dil ile alakalı yayınların daha düşük korelasyon değerine (0.278) sahip olduğu görülmektedir. Aynı grafikte dil ile alakalı iş sayısının ise günlük wikipedia görüntülenmesi ile anlamlı bir korelasyon değerine (0.420) sahiptir. Dili kullananlar ile dile ait iş sayısının ise düşük bir korelasyon değerine sahiptir.
+
+
+```{r echo=FALSE, fig.align=1, fig.height=10, fig.width=15, fig.cap="Kodlama dillerinin kullanıcı ve iş sayılarının diğer parametrelerle ilişki matriksi"}
+Data %>%
+  select(Var_Num) %>%
+  GGally::ggpairs()
+
+```
+
+
+\newpage
+
+# Sonuç
+
+Yazılım alanında kullanılan dillerin, kullanıcı popülerliği ile iş alanındaki popülerlikleri arasında çeşitli farklar görülmektedir. Bunların nedenleri olarak, iş sektöründe daha iş amaçlı diller tercih edilirken, ilgili dili öğrenenler eğitim hobi veya kendi işlerini kolaylaştırmak amacıyla belirli düzeyde öğrenmiş olabilir. Ayrıca zamanın değişimine bağlı olarak sektörel gereksinimlerde de değişimler gerçekleşebilir. Bu nedenle popülerlik kavramını kullanıcı ve sektörel olarak ayrı ayrı düşünmek gerekmektedir. Eğer iş odaklı yazılım öğrenmek gerekiyorsa  sektör  ihtiyaçlarına göre hareket edilmesi daha uygundur. 
+Yazılım dilerinde ayrıca dillere ait bilgi kaynaklara ulaşımda önemli olduğu yapılan analiz sonucunda çıkan önemli sonuçlardan birisidir. Wikipedia gibi hızlı rahat erişiyebilir kaynakların dilin kullanıcı sayılarına etkisi dile ait kitap sayısı kadar  fazladır. Ayrıca Github gibi hem bilgi hemde farklı uygulamaları görülebileceğimiz platformlar kullanıcı sayılarında önemli etkisi bulunmaktadır.
+Yapılan  analizlerin bazı noktalarda yetersiz olabileceği durumlarda bulunmaktadır. Örneğin, R dili yüksek oranda istatistiksel analizlerde kullanılan bir dil olmasına rağmen Java gibi bazı diller birden fazla alanda kullanılabilir. Dilin toplam kullanıcı sayısı yerine o dilin hangi amaçla kullanıldığı bilgisinin olduğu bir veriseti daha kapsamlı sonuçlar elde etmemizi sağlayabilir. Verisetine ek olarak kullanılan analiz yöntemi de daha iyi sonuçlar elde etmemizi sağlayabilirdir. Örneğin doğrusal regresyon analizi bu veri setinde kullanarak daha kapsamlı sonuçlar elde edilebilir. 
+
+
+\newpage
+
+# Kaynakça {#references}
+
+::: {#refs}
+:::
