@@ -40,7 +40,7 @@ knitr::opts_chunk$set(cache = FALSE, echo = TRUE, message = FALSE, warning = FAL
 <!-- ============================== NOTLAR ================================= -->
 
 <!-- ======================================================================= -->
-[^1]: 19080760, [Github Repo](https://github.com/ahmetokankarasu/Final_Odevi)
+[^1]: 19080760, [Github Repo](https://github.com/ahmetokankarasu/But)
 
 # Giriş
 
