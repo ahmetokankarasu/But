@@ -16,7 +16,7 @@ output:
     fig_height: 3
     fig_width: 4
     keep_tex: no
-    # latex_engine: xelatex
+    latex_engine: xelatex
     number_sections: yes
     toc: no
 geometry: margin=1in
